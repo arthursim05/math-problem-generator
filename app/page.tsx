@@ -103,7 +103,7 @@ export default function Home() {
           Math Problem Generator
         </h1>
         
-        <div className="flex flex-row bg-white rounded-lg shadow-lg p-6 mb-6 gap-2">
+        <div className="flex flex-col md:flex-row bg-white rounded-lg shadow-lg p-6 mb-6 gap-2">
           <button
             onClick={generateProblem}
             disabled={isLoading}
@@ -111,12 +111,12 @@ export default function Home() {
           >
             {isLoading ? 'Generating...' : 'Generate New Problem'}
           </button>
-          <select className='rounded-lg border w-full text-gray-800 p-1' value={difficulty} onChange={(e) => setDifficulty(e.target.value as Difficulty)}>
+          <select className='rounded-lg border w-full text-gray-800' value={difficulty} onChange={(e) => setDifficulty(e.target.value as Difficulty)}>
             <option value="easy">Easy</option>
             <option value="medium">Medium</option>
             <option value="hard">Hard</option>
           </select>
-          <select className='rounded-lg border w-full text-gray-800 p-1' value={operation} onChange={(e) => setOperation(e.target.value as Operation)}>
+          <select className='rounded-lg border w-full text-gray-800' value={operation} onChange={(e) => setOperation(e.target.value as Operation)}>
             <option value="add">Addition</option>
             <option value="sub">Subtraction</option>
             <option value="multi">Multiplication</option>

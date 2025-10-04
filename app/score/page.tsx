@@ -37,7 +37,7 @@ export default function Score() {
       {errMsg && <p className="text-red-500">{errMsg}</p>}
 
       {score && (
-        <div className="grid grid-cols-2 gap-4 text-center">
+        <div className="flex flex-col md:grid md:grid-cols-2 gap-4 text-center">
           <div className="bg-blue-50 rounded-lg p-4">
             <p className="text-lg font-bold text-blue-700">{score.attempts}</p>
             <p className="text-sm text-gray-600">Attempts</p>
