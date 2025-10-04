@@ -24,11 +24,11 @@ export default function Home() {
     // TODO: Implement problem generation logic
     // This should call your API route to generate a new problem
     // and save it to the database
-    const response = await ai.models.generateContent({
-      model: "gemini-2.5-flash",
-      contents: "Explain how AI works in a few words",
-    });
-    console.log("response:", response.text);
+    const res = await fetch("/api/math-problem", { method: "POST" });
+    const data = await res.json();
+    console.log("Problem:", data.problem_text);
+    console.log("Answer:", data.final_answer);
+    // console.log("Session ID:", data.session_id);
   }
 
   const submitAnswer = async (e: React.FormEvent) => {

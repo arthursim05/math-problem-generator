@@ -1,18 +1,26 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import { GoogleGenerativeAI } from "@google/generative-ai";
+// import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+interface ProblemResponse {
+  session_id: string;
+  problem_text: string;
+  final_answer: number;
+};
+
+// const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
+const genAi = new GoogleGenAI({
+    apiKey: process.env.GOOGLE_API_KEY!,
+});
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY! // use service key for inserts
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! // use service key for inserts
 );
 
 export async function POST() {
   try {
-    const model = genAI.getGenerativeModel({ model: "gemini-2.5-flash" });
-
     const prompt = `
     Generate ONE Primary 5 math word problem (Singapore standard).
     Respond strictly in JSON format:
@@ -22,11 +30,15 @@ export async function POST() {
     }
     `;
 
-    const result = await model.generateContent(prompt);
-    const text = result.response.text();
+    const response = await genAi.models.generateContent({
+        model: "gemini-2.5-flash",
+        contents: prompt,
+    });
+
+    const text = response.text.replace(/```json|```/g, "").trim();
 
     // Parse JSON from Gemini
-    let problemData;
+    let problemData: ProblemResponse;
     try {
       problemData = JSON.parse(text);
     } catch (err) {
@@ -38,22 +50,22 @@ export async function POST() {
     }
 
     // Save into Supabase
-    // const { data, error } = await supabase
-    //   .from("math_problem_sessions")
-    //   .insert({
-    //     problem_text: problemData.problem_text,
-    //     final_answer: problemData.final_answer,
-    //   })
-    //   .select("id")
-    //   .single();
+    const { data, error } = await supabase
+      .from("math_problem_sessions")
+      .insert({
+        problem_text: problemData.problem_text,
+        correct_answer: problemData.final_answer,
+      })
+      .select("id")
+      .single();
 
-    // if (error) {
-    //   console.error("Supabase insert error:", error);
-    //   return NextResponse.json({ error: "Database insert failed" }, { status: 500 });
-    // }
+    if (error) {
+      console.error("Supabase insert error:", error);
+      return NextResponse.json({ error: "Database insert failed" }, { status: 500 });
+    }
 
     return NextResponse.json({
-    //   session_id: data.id,
+      session_id: data.id,
       problem_text: problemData.problem_text,
       final_answer: problemData.final_answer,
     });
