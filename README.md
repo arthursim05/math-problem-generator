@@ -28,6 +28,11 @@ cd math-problem-generator
    NEXT_PUBLIC_SUPABASE_ANON_KEY=your_actual_supabase_anon_key
    GOOGLE_API_KEY=your_actual_google_api_key
    ```
+3. Supabase Credentials:
+   ```
+   SUPABASE_URL=https://uyhevzzkpmsqaqyxkyeg.supabase.co
+   SUPABASE_ANON_KEY=yJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InV5aGV2enprcG1zcWFxeXhreWVnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTk1MTI4MjIsImV4cCI6MjA3NTA4ODgyMn0.UiC7CVkU1C8NieOxxeyOMW2DS5zn6T4oTKY4jQwiNNE
+   ```
 
 ### 3. Install Dependencies
 
@@ -43,7 +48,7 @@ npm run dev
 
 Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-### 1. Requirements Checklist
+### Requirements Checklist
 
 - [✅] AI generates appropriate Primary 5 level math problems
 - [✅] Problems and answers are saved to Supabase
@@ -61,7 +66,7 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 - Integrated **Supabase** for database storage of problem submissions, score tracking, and history.
 - Added **Google GenAI (Gemini)** integration to dynamically generate math problems.
 - Designed a **clean, responsive UI** with Tailwind CSS, focusing on accessibility and usability.
-- Implemented **difficulty levels (Easy / Medium / Hard)** and **problem types** (Addition, Subtraction, Multiplication, Division, Mixed).
+- Implemented **difficulty levels (Easy / Medium / Hard)** and **problem types** (Addition, Subtraction, Multiplication, Division).
 - Built **score tracking** that calculates attempts, correct answers, streak, and best streak dynamically.
 - Created a **history view** to display all past submissions, correctness, and feedback with timestamps.
 
