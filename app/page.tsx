@@ -1,24 +1,34 @@
 'use client'
 
-import { useState } from 'react'
+import { useState } from 'react';
+import { GoogleGenAI } from "@google/genai";
 
 interface MathProblem {
   problem_text: string
   final_answer: number
-}
+};
 
 export default function Home() {
-  const [problem, setProblem] = useState<MathProblem | null>(null)
-  const [userAnswer, setUserAnswer] = useState('')
-  const [feedback, setFeedback] = useState('')
-  const [isLoading, setIsLoading] = useState(false)
-  const [sessionId, setSessionId] = useState<string | null>(null)
-  const [isCorrect, setIsCorrect] = useState<boolean | null>(null)
+  const [problem, setProblem] = useState<MathProblem | null>(null);
+  const [userAnswer, setUserAnswer] = useState('');
+  const [feedback, setFeedback] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
+  const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+
+  const ai = new GoogleGenAI({
+    apiKey: process.env.NEXT_PUBLIC_GOOGLE_API_KEY || '',
+  });
 
   const generateProblem = async () => {
     // TODO: Implement problem generation logic
     // This should call your API route to generate a new problem
     // and save it to the database
+    const response = await ai.models.generateContent({
+      model: "gemini-2.5-flash",
+      contents: "Explain how AI works in a few words",
+    });
+    console.log("response:", response.text);
   }
 
   const submitAnswer = async (e: React.FormEvent) => {
