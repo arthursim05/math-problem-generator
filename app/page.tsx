@@ -6,6 +6,7 @@ import { GoogleGenAI } from "@google/genai";
 interface MathProblem {
   problem_text: string
   final_answer: number
+  session_id?: string
 };
 
 export default function Home() {
@@ -13,8 +14,10 @@ export default function Home() {
   const [userAnswer, setUserAnswer] = useState('');
   const [feedback, setFeedback] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [isCorrect, setIsCorrect] = useState<boolean | null>(null);
+  const [errMsg, setErrMsg] = useState<string | null>(null);
 
   const ai = new GoogleGenAI({
     apiKey: process.env.NEXT_PUBLIC_GOOGLE_API_KEY || '',
@@ -24,11 +27,28 @@ export default function Home() {
     // TODO: Implement problem generation logic
     // This should call your API route to generate a new problem
     // and save it to the database
-    const res = await fetch("/api/math-problem", { method: "POST" });
-    const data = await res.json();
-    console.log("Problem:", data.problem_text);
-    console.log("Answer:", data.final_answer);
-    // console.log("Session ID:", data.session_id);
+    setIsLoading(true);
+    setIsCorrect(null);
+    setErrMsg(null);
+    try {
+      const res = await fetch("/api/math-problem", { method: "POST" });
+      const data = await res.json();
+      if (data.problem_text && data.final_answer !== undefined) {
+        setProblem({
+          problem_text: data.problem_text,
+          final_answer: data.final_answer,
+          session_id: data.session_id || null,
+        });
+        setSessionId(data.session_id || null);
+      } else {
+        setErrMsg("Failed to generate problem. Please try again.");
+      }
+    } catch (error) {
+      console.error("Error generating problem:", error);
+      setErrMsg("Error generating problem. Please try again.");
+    } finally {
+      setIsLoading(false);
+    }
   }
 
   const submitAnswer = async (e: React.FormEvent) => {
@@ -36,6 +56,28 @@ export default function Home() {
     // TODO: Implement answer submission logic
     // This should call your API route to check the answer,
     // save the submission, and generate feedback
+    setIsSubmitting(true);
+    if (!problem || !sessionId) return;
+    try {
+      const res = await fetch("/api/math-problem/submit", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          session_id: sessionId,
+          user_answer: userAnswer,
+        }),
+      });
+
+      const data = await res.json();
+      console.log("Submission response:", data);
+      setFeedback(data.feedback);
+      setIsCorrect(data.is_correct);
+    } catch (error) { 
+      console.error("Error submitting answer:", error);
+      setErrMsg("Error submitting answer. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   return (
@@ -80,10 +122,10 @@ export default function Home() {
               
               <button
                 type="submit"
-                disabled={!userAnswer || isLoading}
+                disabled={!userAnswer || isLoading || isSubmitting}
                 className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105"
               >
-                Submit Answer
+                {isSubmitting ? "Submiting Answer" : "Submit Answer"}
               </button>
             </form>
           </div>
