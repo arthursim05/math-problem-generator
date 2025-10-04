@@ -6,6 +6,8 @@ import { GoogleGenAI } from "@google/genai";
 interface ProblemResponse {
   session_id: string;
   problem_text: string;
+  hints: string;
+  stepbystep: string;
   final_answer: number;
 };
 
@@ -19,14 +21,20 @@ const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY! // use service key for inserts
 );
 
-export async function POST() {
+export async function POST(req: Request) {
   try {
+    const { difficulty, operation } = await req.json();
+    
     const prompt = `
     Generate ONE Primary 5 math word problem (Singapore standard).
+    Difficulty Level: ${difficulty}
+    Operation type: ${operation}
     Respond strictly in JSON format:
     {
       "problem_text": "The word problem text here",
-      "final_answer": <numeric_answer>
+      "final_answer": <numeric_answer>,
+      "hints": "A hint to help solve the problem",
+      "stepbystep": "Step-by-step solution to the problem",
     }
     `;
 
@@ -35,7 +43,16 @@ export async function POST() {
         contents: prompt,
     });
 
+    if (!response.text) {
+      console.error("AI response missing text:", response);
+      return NextResponse.json(
+        { error: "AI response missing text" },
+        { status: 500 }
+      );
+    }
+
     const text = response.text.replace(/```json|```/g, "").trim();
+    console.log("AI response text:", text);
 
     // Parse JSON from Gemini
     let problemData: ProblemResponse;
@@ -68,6 +85,8 @@ export async function POST() {
       session_id: data.id,
       problem_text: problemData.problem_text,
       final_answer: problemData.final_answer,
+      hints: problemData.hints || '',
+      stepbystep: problemData.stepbystep || '',
     });
   } catch (error) {
     console.error("API error:", error);

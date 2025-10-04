@@ -3,12 +3,6 @@ import { createClient } from "@supabase/supabase-js";
 // import { GoogleGenerativeAI } from "@google/generative-ai";
 import { GoogleGenAI } from "@google/genai";
 
-interface ProblemResponse {
-  session_id: string;
-  problem_text: string;
-  final_answer: number;
-};
-
 // const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY!);
 const genAi = new GoogleGenAI({
     apiKey: process.env.GOOGLE_API_KEY!,
@@ -59,7 +53,7 @@ export async function POST(req: Request) {
         contents: prompt,
     });
 
-    const feedback = response.text.trim();
+    const feedback = (response.text ?? "").trim();
 
     // Save submission
     const { error: insertError } = await supabase

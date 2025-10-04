@@ -2,15 +2,23 @@
 
 import { useState } from 'react';
 import { GoogleGenAI } from "@google/genai";
+import {Accordion, AccordionItem} from "@heroui/accordion"
+
+type Difficulty = 'easy' | 'medium' | 'hard';
+type Operation = 'addition' | 'subtraction' | 'multiplication' | 'division';
 
 interface MathProblem {
   problem_text: string
   final_answer: number
+  hints: string
+  stepbystep: string
   session_id?: string
 };
 
 export default function Home() {
   const [problem, setProblem] = useState<MathProblem | null>(null);
+  const [difficulty, setDifficulty] = useState<Difficulty>('easy')
+  const [operation, setOperation] = useState<Operation>('addition')
   const [userAnswer, setUserAnswer] = useState('');
   const [feedback, setFeedback] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -30,13 +38,24 @@ export default function Home() {
     setIsLoading(true);
     setIsCorrect(null);
     setErrMsg(null);
+    setUserAnswer('');
+    setFeedback('');
     try {
-      const res = await fetch("/api/math-problem", { method: "POST" });
+      const res = await fetch("/api/math-problem", { 
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          difficulty,
+          operation,
+        }),
+      });
       const data = await res.json();
       if (data.problem_text && data.final_answer !== undefined) {
         setProblem({
           problem_text: data.problem_text,
           final_answer: data.final_answer,
+          hints: data.hints || '',
+          stepbystep: data.stepbystep || '',
           session_id: data.session_id || null,
         });
         setSessionId(data.session_id || null);
@@ -44,7 +63,6 @@ export default function Home() {
         setErrMsg("Failed to generate problem. Please try again.");
       }
     } catch (error) {
-      console.error("Error generating problem:", error);
       setErrMsg("Error generating problem. Please try again.");
     } finally {
       setIsLoading(false);
@@ -69,11 +87,9 @@ export default function Home() {
       });
 
       const data = await res.json();
-      console.log("Submission response:", data);
       setFeedback(data.feedback);
       setIsCorrect(data.is_correct);
     } catch (error) { 
-      console.error("Error submitting answer:", error);
       setErrMsg("Error submitting answer. Please try again.");
     } finally {
       setIsSubmitting(false);
@@ -81,13 +97,13 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white">
-      <main className="container mx-auto px-4 py-8 max-w-2xl">
+    <div className=" bg-gradient-to-b from-blue-50 to-white">
+      <main className="container mx-auto px-4 py-8 max-w-full">
         <h1 className="text-4xl font-bold text-center mb-8 text-gray-800">
           Math Problem Generator
         </h1>
         
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-6">
+        <div className="flex flex-row bg-white rounded-lg shadow-lg p-6 mb-6 gap-2">
           <button
             onClick={generateProblem}
             disabled={isLoading}
@@ -95,6 +111,17 @@ export default function Home() {
           >
             {isLoading ? 'Generating...' : 'Generate New Problem'}
           </button>
+          <select className='rounded-lg border w-full text-gray-800 p-1' value={difficulty} onChange={(e) => setDifficulty(e.target.value as Difficulty)}>
+            <option value="easy">Easy</option>
+            <option value="medium">Medium</option>
+            <option value="hard">Hard</option>
+          </select>
+          <select className='rounded-lg border w-full text-gray-800 p-1' value={operation} onChange={(e) => setOperation(e.target.value as Operation)}>
+            <option value="add">Addition</option>
+            <option value="sub">Subtraction</option>
+            <option value="multi">Multiplication</option>
+            <option value="div">Division</option>
+          </select>
         </div>
 
         {problem && (
@@ -114,7 +141,7 @@ export default function Home() {
                   id="answer"
                   value={userAnswer}
                   onChange={(e) => setUserAnswer(e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-800"
                   placeholder="Enter your answer"
                   required
                 />
@@ -125,11 +152,26 @@ export default function Home() {
                 disabled={!userAnswer || isLoading || isSubmitting}
                 className="w-full bg-green-600 hover:bg-green-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition duration-200 ease-in-out transform hover:scale-105"
               >
-                {isSubmitting ? "Submiting Answer" : "Submit Answer"}
+                {isSubmitting ? "Submiting..." : "Submit Answer"}
               </button>
             </form>
           </div>
         )}
+
+        {problem && 
+          <div className='flex flex-row mb-6'>
+            <Accordion variant="splitted">
+              <AccordionItem key="1" aria-label="Accordion 1" title="Hints">
+                {problem.hints}
+              </AccordionItem>
+            </Accordion>
+            <Accordion variant="splitted">
+              <AccordionItem key="1" aria-label="Accordion 1" title="Step By Step">
+                {problem.stepbystep}
+              </AccordionItem>
+            </Accordion>
+          </div>
+        }
 
         {feedback && (
           <div className={`rounded-lg shadow-lg p-6 ${isCorrect ? 'bg-green-50 border-2 border-green-200' : 'bg-yellow-50 border-2 border-yellow-200'}`}>
